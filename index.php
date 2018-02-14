@@ -52,7 +52,7 @@ $active = 'class="active"';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST')
 {
-	if(isset($_POST('save_paciente'))
+	if(isset($_POST('save_paciente')))
 	{
 	    $sql = "INSERT INTO pacientes (nome, identidade, orgao_emissor, cidade, uf, telefone)
 	    VALUES ('".$_POST["nome"]."','".$_POST["identidade"]."','".$_POST["orgao_emissor"]."','".$_POST["cidade"]."','".$_POST["uf"]."','".$_POST["telefone"]."')";
