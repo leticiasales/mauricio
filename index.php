@@ -1,5 +1,7 @@
 <?php
 
+$alert = '';
+
 $link = mysql_connect('localhost', 'root', 'root');
 if (!$link) {
     die('Erro de conexão: ' . mysql_error());
@@ -54,19 +56,32 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 {
 	if(isset($_POST['save_paciente']))
 	{
-	    $sql = "INSERT INTO pacientes (nome, identidade, orgao_emissor, cidade, uf, telefone)
-	    VALUES ('".$_POST["nome"]."','".$_POST["identidade"]."','".$_POST["orgao_emissor"]."','".$_POST["cidade"]."','".$_POST["uf"]."','".$_POST["telefone"]."')";
-	    if (!mysql_query($sql)) {
-	    	echo "<div class=\"alert alert-warning\" role=\"alert\">Erro ao cadastrar paciente.</div>";
+		if(isset($_POST["nome"]) && isset($_POST["identidade"]) && isset($_POST["orgao_emissor"]) && isset($_POST["cidade"]) && isset($_POST["uf"]) && isset($_POST["telefone"]))
+		{
+		    $sql = "INSERT INTO pacientes (nome, identidade, orgao_emissor, cidade, uf, telefone)
+		    VALUES ('".$_POST["nome"]."','".$_POST["identidade"]."','".$_POST["orgao_emissor"]."','".$_POST["cidade"]."','".$_POST["uf"]."','".$_POST["telefone"]."')";
+		    if (mysql_query($sql)) {
+		    	$alert = "<div class=\"alert alert-success\" role=\"alert\">Paciente salvo com sucesso.</div>";
+		    } else {
+		    	$alert = "<div class=\"alert alert-danger\" role=\"alert\">Erro ao cadastrar paciente.</div>";
+		    }
+	    } else {
+	    	$alert = "<div class=\"alert alert-danger\" role=\"alert\">Erro ao cadastrar paciente.</div>";
 	    }
 	}
 	else if(isset($_POST['save_receituario']))
 	{
-	    $sql = "INSERT INTO receituarios (paciente, prescricao)
-	    VALUES ('".$_POST["paciente"]."','".$_POST["prescricao"]."')";
-	    if (!mysql_query($sql)) {
-	    	echo "<div class=\"alert alert-warning\" role=\"alert\">Erro ao salvar receituario.</div>";
-	    }
+		if(isset($_POST['paciente']) && isset($_POST['prescricao'])) {
+		    $sql = "INSERT INTO receituarios (paciente, prescricao)
+		    VALUES ('".$_POST['paciente']."','".$_POST['prescricao']."')";
+		    if (mysql_query($sql)) {
+		    	$alert = "<div class=\"alert alert-success\" role=\"alert\">Receituário salvo com sucesso.</div>";
+		    } else {
+		    	$alert = "<div class=\"alert alert-danger\" role=\"alert\">Erro ao cadastrar receituário.</div>";
+	    	}
+    	} else {
+	    	$alert = "<div class=\"alert alert-danger\" role=\"alert\">Erro ao cadastrar receituário.</div>";
+    	}
 	}
 }
 
@@ -83,18 +98,17 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 	<title>Programa</title>
 </head>
 <body>
-
 	<nav class="navbar-default navbar-fixed-top">
 	  <div class="container-fluid">
 	    <!-- Brand and toggle get grouped for better mobile display -->
 	    <div class="navbar-header">
-	      <a class="navbar-brand" href="#">Departamento Municipal de Saúde</a>
+	      <a class="navbar-brand" href="/">Departamento Municipal de Saúde</a>
 	    </div>
 
 	    <!-- Collect the nav links, forms, and other content for toggling -->
 	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 	      <ul class="nav navbar-nav">
-	        <li id="home" class="active"><a href="#">Home</a></li>
+	        <li id="home" class="active"><a href="/">Home</a></li>
 	        <li id="pacientes"><a href="#">Pacientes</a></li>
 	        <li id="receituarios"><a href="#">Receituarios</a></li>
 	        <li class="dropdown">
@@ -117,6 +131,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 	</nav>
 
 	<div class="tab home">
+		<?php echo $alert; ?>
 		<div class="jumbotron">
 		  <h1>Bem vindo!</h1>
 		  <p>Nesta página você pode adicionar e buscar pacientes e receituários.
@@ -202,10 +217,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 		            <br style="clear:both">
 		                        <h3 style="margin-bottom: 25px; text-align: center;">Novo Receituário</h3>
 		        				<div class="form-group col-md-12">
-		        					<label for="nome">Nome</label>
-		    						<select type="text" class="form-control" id="name" name="name" placeholder="Paciente" required>
+		        					<label for="nome">Paciente</label>
+		    						<select type="text" class="form-control" id="paciente" name="paciente" placeholder="Paciente" required>
+		    							<option>Selecione um Paciente</option>
 		    							<?php
-			    							$sql = "SELECT nome FROM pacientes"; 
+			    							$sql = "SELECT entity_id, nome FROM pacientes"; 
 											$pacientes = mysql_query($sql);
 											if (mysql_num_rows($pacientes) > 0) {
 											    while ($row = mysql_fetch_assoc($pacientes)) {
@@ -216,10 +232,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 		    						</select>
 		    					</div>
 		    					<div class="form-group col-md-12">
-		        					<label for="nome">Receituário</label>
-								    <textarea class="form-control" id="prescricao" rows="6"></textarea>
+		        					<label for="prescricao">Prescrição</label>
+								    <textarea type="text" class="form-control" id="prescricao" name="prescricao" rows="6"></textarea>
 		    					</div>
-		            			<button type="submit" id="save_paciente" name="save_paciente" class="btn btn-primary pull-right">Adicionar</button>
+		            			<button type="submit" id="save_receituario" name="save_receituario" class="btn btn-primary pull-right">Adicionar</button>
 		            </form>
 		        </div>
 		    </div>
@@ -249,11 +265,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 		    <div class="col-md-12">
 		        <ul class="list">  
 		        	<?php
-		        		$sql = "SELECT * FROM receituarios";
+		        		$sql = "SELECT * FROM receituarios rec JOIN pacientes pac WHERE rec.paciente = pac.entity_id";
 						$result = mysql_query($sql);
 						if (mysql_num_rows($result) > 0) {
 						    while ($row = mysql_fetch_assoc($result)) {
-							    echo "<li>" . $row['telefone'] . "</li>";
+							    echo "<li>Paciente:" . $row['nome'] . " Prescrição:" . $row['prescricao'] . "</li>";
 							}
 						} else {
 						    echo "<p>Nenhum receituario cadastrado.</p>";
@@ -262,9 +278,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 		        </ul>
 		    </div>
 	    </div>
-	</div>
-	<div class="tab busca" style="display: none;">
-		<?php echo $busca;?>
 	</div>
 </body>
 </html>
