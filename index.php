@@ -52,7 +52,7 @@ $active = 'class="active"';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST')
 {
-	if(isset($_POST('save_paciente'))
+	if(isset($_POST['save_paciente']))
 	{
 	    $sql = "INSERT INTO pacientes (nome, identidade, orgao_emissor, cidade, uf, telefone)
 	    VALUES ('".$_POST["nome"]."','".$_POST["identidade"]."','".$_POST["orgao_emissor"]."','".$_POST["cidade"]."','".$_POST["uf"]."','".$_POST["telefone"]."')";
@@ -60,9 +60,13 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 	    	echo "<div class=\"alert alert-warning\" role=\"alert\">Erro ao cadastrar paciente.</div>";
 	    }
 	}
-	else if(isset($_POST('busca')))
+	else if(isset($_POST['save_receituario']))
 	{
-		$sql = 'SELECT * FROM receituarios WHERE `receituario` LIKE '; 
+	    $sql = "INSERT INTO receituarios (paciente, prescricao)
+	    VALUES ('".$_POST["paciente"]."','".$_POST["prescricao"]."')";
+	    if (!mysql_query($sql)) {
+	    	echo "<div class=\"alert alert-warning\" role=\"alert\">Erro ao salvar receituario.</div>";
+	    }
 	}
 }
 
@@ -102,12 +106,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 	          </ul>
 	        </li>
 	      </ul>
-	      <form class="navbar-form navbar-right" method="POST">
+<!-- 	      <form class="navbar-form navbar-right" method="POST">
 	        <div class="form-group">
 	          <input type="text" class="form-control" placeholder="Insira aqui sua busca">
 	        </div>
 	        <button type="submit" class="btn btn-default">Buscar</button>
-	      </form>
+	      </form> -->
 	    </div><!-- /.navbar-collapse -->
 	  </div><!-- /.container-fluid -->
 	</nav>
@@ -199,11 +203,21 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 		                        <h3 style="margin-bottom: 25px; text-align: center;">Novo Receituário</h3>
 		        				<div class="form-group col-md-12">
 		        					<label for="nome">Nome</label>
-		    						<input type="text" class="form-control" id="name" name="name" placeholder="Paciente" required>
+		    						<select type="text" class="form-control" id="name" name="name" placeholder="Paciente" required>
+		    							<?php
+			    							$sql = "SELECT nome FROM pacientes"; 
+											$pacientes = mysql_query($sql);
+											if (mysql_num_rows($pacientes) > 0) {
+											    while ($row = mysql_fetch_assoc($pacientes)) {
+											    echo '<option value="' . $row['entity_id'] . '">' . $row['nome'] . '</option>';
+												}
+											}
+										?>
+		    						</select>
 		    					</div>
 		    					<div class="form-group col-md-12">
 		        					<label for="nome">Receituário</label>
-								    <textarea class="form-control" id="prescricao" rows="3"></textarea>
+								    <textarea class="form-control" id="prescricao" rows="6"></textarea>
 		    					</div>
 		            			<button type="submit" id="save_paciente" name="save_paciente" class="btn btn-primary pull-right">Adicionar</button>
 		            </form>
@@ -233,19 +247,19 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 	<div class="tab receituarios" style="display: none;">
 	    <div class="container">
 		    <div class="col-md-12">
-		        <div class="form-area">  
+		        <ul class="list">  
 		        	<?php
 		        		$sql = "SELECT * FROM receituarios";
 						$result = mysql_query($sql);
 						if (mysql_num_rows($result) > 0) {
 						    while ($row = mysql_fetch_assoc($result)) {
-							    echo "<li>Nome: " . $row['nome'] . " Telefone: " . $row['telefone'] . "</li>";
+							    echo "<li>" . $row['telefone'] . "</li>";
 							}
 						} else {
 						    echo "<p>Nenhum receituario cadastrado.</p>";
 						}
 					?>
-		        </div>
+		        </ul>
 		    </div>
 	    </div>
 	</div>
@@ -266,3 +280,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST')
 		$(id).show();
 	})
 </script>
+
+<style type="text/css">
+	.tab {
+		margin: 100px 50px;
+	}
+</style>
